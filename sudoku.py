@@ -8,6 +8,11 @@ import collections.abc
 
 
 def check_value(value):
+    '''
+    This is a helper method used when changing the cell numbers of a sudoku.
+    It raises an exception if the given numbers are not valid: They must be in the
+    range 1 to 9 or 0 (to indicate an empty cell)
+    '''
     try:
         if isinstance(value, np.ndarray):
             if not np.all(np.isin(value.flatten(), range(0, 10))):
@@ -22,17 +27,34 @@ def check_value(value):
 
 
 
+class SudokuCell(np.uint8):
+    '''
+    Instances of this class represents a single cell of an arbitrary sudoku configuration
+    '''
+    def __new__(cls, value):
+        return super(SudokuCell, cls).__new__(cls, value)
+
+
+    @property
+    def empty(self):
+        '''
+        Returns True if this cell is empty (its the same as comparting it to zero)
+        '''
+        return self == 0
+
+
 
 class SudokuSection(np.ndarray):
+    '''
+    Represents a section of an arbitrary sudoku configuration (it could be a row, column, square, ...)
+    '''
     def __new__(cls, section):
         return section.view(type=SudokuSection)
 
 
     def __getitem__(self, item):
         value = self.view(type=np.ndarray).__getitem__(item)
-        if not isinstance(value, np.ndarray):
-            return value
-        return SudokuSection(value)
+        return SudokuSection(value) if isinstance(value, np.ndarray) else SudokuCell(value)
 
 
     def __setitem__(self, item, value):
@@ -46,6 +68,35 @@ class SudokuSection(np.ndarray):
 
     def clear(self):
         self.fill(0)
+
+
+    @property
+    def empty_cells_count(self):
+        return self.size - self.filled_cells_count
+
+
+    @property
+    def filled_cells_count(self):
+        return np.count_nonzero(self)
+
+
+    @property
+    def empty(self):
+        return self.filled_cells_count == 0
+
+
+    @property
+    def full(self):
+        return self.empty_cells_count == 0
+
+
+    @property
+    def unique_numbers(self):
+        nums = set(np.unique(self))
+        nums.discard(0)
+        return np.array(list(nums), dtype=np.uint8)
+
+
 
 
 
