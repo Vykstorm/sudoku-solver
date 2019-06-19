@@ -4,7 +4,7 @@
 import unittest
 from unittest import TestCase
 import numpy as np
-from sudoku import Sudoku
+from sudoku import Sudoku, SudokuCell, SudokuSection
 from itertools import product
 
 
@@ -16,6 +16,7 @@ class TestSudoku(TestCase):
         sudoku = Sudoku()
         for i, j in product(range(0, 9), range(0, 9)):
             self.assertIn(sudoku[i, j], range(0, 10))
+            self.assertIsInstance(sudoku[i, j], SudokuCell)
 
 
     def test_sudoku_set_number(self):
@@ -41,7 +42,7 @@ class TestSudoku(TestCase):
     def test_sudoku_get_row(self):
         sudoku = Sudoku()
         for i in range(0, 9):
-            self.assertIsInstance(sudoku[i], np.ndarray)
+            self.assertIsInstance(sudoku[i], SudokuSection)
             self.assertEqual(sudoku[i].ndim, 1)
             self.assertEqual(len(sudoku[i]), 9)
 
@@ -72,7 +73,7 @@ class TestSudoku(TestCase):
     def test_sudoku_get_column(self):
         sudoku = Sudoku()
         for j in range(0, 9):
-            self.assertIsInstance(sudoku[:, j], np.ndarray)
+            self.assertIsInstance(sudoku[:, j], SudokuSection)
             self.assertEqual(sudoku[:, j].ndim, 1)
             self.assertEqual(len(sudoku[:, j]), 9)
 
@@ -100,14 +101,6 @@ class TestSudoku(TestCase):
             self.assertTrue(np.all(sudoku[:, j] == 0))
 
 
-    def test_sudoku_clear(self):
-        sudoku = Sudoku()
-        for i, j in product(range(0, 9), range(0, 9)):
-            sudoku[i, j] = (i * 9 + j) % 9 + 1
-        sudoku.clear()
-        self.assertTrue(np.all(sudoku == 0))
-
-
     def test_sudoku_copy(self):
         sudoku = Sudoku()
         for i, j in product(range(0, 9), range(0, 9)):
@@ -121,13 +114,13 @@ class TestSudoku(TestCase):
         sudoku = Sudoku()
         for k in range(0, 9):
             square = sudoku.squares[k]
-            self.assertIsInstance(square, np.ndarray)
+            self.assertIsInstance(square, SudokuSection)
             self.assertEqual(square.ndim, 2)
             self.assertEqual(len(square.flatten()), 9)
 
         for y, x in product(range(0, 3), range(0, 3)):
             square = sudoku.squares[y, x]
-            self.assertIsInstance(square, np.ndarray)
+            self.assertIsInstance(square, SudokuSection)
             self.assertEqual(square.ndim, 2)
             self.assertEqual(len(square.flatten()), 9)
 
@@ -163,6 +156,59 @@ class TestSudoku(TestCase):
     def test_sudoku_init_values(self):
         sudoku = Sudoku()
         self.assertTrue(np.all(sudoku.flatten() == np.zeros([9, 9]).flatten()))
+
+
+    def test_sudoku_cell_empty(self):
+        sudoku = Sudoku.random()
+        for i, j in product(range(0, 9), range(0, 9)):
+            self.assertFalse((sudoku[i, j] == 0) ^ sudoku[i, j].empty)
+
+
+    def test_sudoku_section_empty_cells_count(self):
+        sudoku = Sudoku.random()
+        for i in range(0, 9):
+            row = sudoku[i]
+            self.assertEqual(row.empty_cells_count, np.sum(row == 0))
+
+
+    def test_sudoku_section_filled_cells_count(self):
+        sudoku = Sudoku.random()
+        for j in range(0, 9):
+            col = sudoku[:, j]
+            self.assertEqual(col.filled_cells_count, np.count_nonzero(col))
+            self.assertEqual(col.filled_cells_count + col.empty_cells_count, col.size)
+
+
+    def test_sudoku_section_empty(self):
+        sudoku = Sudoku()
+        del sudoku.squares[0]
+        self.assertTrue(sudoku.squares[0].empty)
+        sudoku[0, 0] = 1
+        self.assertFalse(sudoku.squares[0].empty)
+
+
+    def test_sudoku_section_full(self):
+        sudoku = Sudoku()
+        sudoku.squares[0] = (np.random.randint(9, size=9) + 1).reshape([3, 3])
+        self.assertTrue(sudoku.squares[0].full)
+        del sudoku.squares[0]
+        self.assertFalse(sudoku.squares[0].full)
+
+
+    def test_sudoku_section_clear(self):
+        sudoku = Sudoku()
+
+        sudoku.squares[0] = np.arange(1, 10).reshape([3, 3])
+        sudoku.squares[0].clear()
+        self.assertTrue(sudoku.squares[0].empty)
+
+
+    def test_sudoku_section_unique_numbers(self):
+        sudoku = Sudoku.random()
+        for i in range(0, 9):
+            row = sudoku[i]
+            self.assertTrue(frozenset(row.unique_numbers).issubset(frozenset(row)))
+            self.assertFalse(0 in row.unique_numbers)
 
 
 if __name__ == '__main__':
