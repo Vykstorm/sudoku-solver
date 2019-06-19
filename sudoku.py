@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from itertools import product
+from functools import partial
 import collections.abc
 
 
@@ -27,6 +28,11 @@ def check_value(value):
 
 
 
+
+
+
+
+
 class SudokuCell(np.uint8):
     '''
     Instances of this class represents a single cell of an arbitrary sudoku configuration
@@ -46,10 +52,10 @@ class SudokuCell(np.uint8):
 
 class SudokuSection(np.ndarray):
     '''
-    Represents a section of an arbitrary sudoku configuration (it could be a row, column, square, ...)
+    Objects of this class are subarray of cells of an arbitrary sudoku configuration
     '''
-    def __new__(cls, section):
-        return section.view(type=SudokuSection)
+    def __new__(cls, values):
+        return values.view(type=SudokuSection)
 
 
     def __getitem__(self, item):
@@ -99,6 +105,22 @@ class SudokuSection(np.ndarray):
 
 
 
+class SudokuUnit(SudokuSection):
+    '''
+    An object of this class represent a single row, column or square of an
+    arbitrary sudoku configuration (all of them have a fixed size of 9 numbers)
+    '''
+    def __new__(cls, values):
+        return values.view(type=SudokuUnit)
+
+
+    @property
+    def valid(self):
+        return len(self.unique_numbers) == 9
+
+
+
+
 
 class Sudoku(SudokuSection):
     '''
@@ -134,16 +156,63 @@ class Sudoku(SudokuSection):
             except IndexError:
                 raise IndexError(
                     'You must pass a number in the range [0, 9) or '+
-                    'a pair of numbers in the range [0, 3)')
+                    'a pair of numbers in the range [0, 3) as an index to access sudoku squares')
 
         def __getitem__(self, item):
-            return self.sudoku.__getitem__(self._get_indices(item))
+            return SudokuUnit(self.sudoku.view(type=np.ndarray).__getitem__(self._get_indices(item)))
 
         def __setitem__(self, item, value):
             self.sudoku.__setitem__(self._get_indices(item), value)
 
         def __delitem__(self, item):
             self.__getitem__(item).fill(0)
+
+
+    class RowsView:
+        def __init__(self, sudoku):
+            self.sudoku = sudoku
+
+        def _check_index(self, index):
+            if not isinstance(index, int) or index not in range(0, 9):
+                raise IndexError(
+                    'You must pass a number in the range [0, 9) '+
+                    'as an index to access sudoku rows')
+
+        def __getitem__(self, item):
+            self._check_index(item)
+            return SudokuUnit(self.sudoku.view(type=np.ndarray).__getitem__(item))
+
+        def __setitem__(self, item, value):
+            self._check_index(item)
+            self.sudoku[item] = value
+
+        def __delitem__(self, item):
+            self._check_index(item)
+            del self.sudoku[item]
+
+
+    class ColumnsView:
+        def __init__(self, sudoku):
+            self.sudoku = sudoku
+
+        def _check_index(self, index):
+            if not isinstance(index, int) or index not in range(0, 9):
+                raise IndexError(
+                    'You must pass a number in the range [0, 9) '+
+                    'as an index to access sudoku columns')
+
+        def __getitem__(self, item):
+            self._check_index(item)
+            return SudokuUnit(self.sudoku.view(type=np.ndarray).__getitem__((slice(None), item)))
+
+        def __setitem__(self, item, value):
+            self._check_index(item)
+            self.sudoku[:, item] = value
+
+        def __delitem__(self, item):
+            self._check_index(item)
+            del self.sudoku[:, item]
+
 
 
 
@@ -153,6 +222,8 @@ class Sudoku(SudokuSection):
     def __init__(self):
         super().__init__()
         self.squares = self.SquaresView(self)
+        self.rows = self.RowsView(self)
+        self.columns = self.cols = self.ColumnsView(self)
 
 
     @classmethod
@@ -172,6 +243,8 @@ class Sudoku(SudokuSection):
         Make a copy of this sudoku; return another sudoku instance with the same values
         '''
         return np.copy(self).view(type=Sudoku)
+
+
 
 
     def show(self):
