@@ -139,6 +139,10 @@ class SudokuSection(np.ndarray):
         return self.empty_cells_count == 0
 
 
+    def count(self, num):
+        return np.count_nonzero(self.view(type=np.ndarray) == num)
+
+
     @property
     def numbers(self):
         cells = self.view(type=np.ndarray).flatten()
@@ -148,6 +152,7 @@ class SudokuSection(np.ndarray):
     @property
     def unique_numbers(self):
         return np.unique(self.numbers)
+
 
 
 
@@ -282,11 +287,9 @@ class Sudoku(SudokuSection):
 
         for i, j in product(range(0, 9), range(0, 9)):
             if not self[i, j].empty:
-                i // 3, j // 3
-
-                valid = np.sum(self.rows[i].numbers == self[i, j]) <= 1 and\
-                np.sum(self.columns[j].numbers == self[i, j]) <= 1 and\
-                np.sum(self.squares[i//3, j//3].numbers == self[i, j]) <= 1
+                valid = self.rows[i].count(self[i, j]) <= 1 and\
+                self.columns[j].count(self[i, j]) <= 1 and\
+                self.squares[i // 3, j // 3].count(self[i, j]) <= 1
 
                 ax.text(
                     j+0.5, 9-i-1+0.5, str(self[i, j]), horizontalalignment='center', verticalalignment='center',
