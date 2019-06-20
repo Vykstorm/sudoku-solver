@@ -115,6 +115,13 @@ class SudokuSection(np.ndarray):
         super().__setitem__(item, 0)
 
 
+    def __eq__(self, other):
+        return np.equal(self, other, subok=False)
+
+    def __ne__(self, other):
+        return np.not_equal(self, other, subok=False)
+
+
     def clear(self):
         self.fill(0)
 
@@ -140,7 +147,7 @@ class SudokuSection(np.ndarray):
 
 
     def count(self, num):
-        return np.count_nonzero(self.view(type=np.ndarray) == num)
+        return np.count_nonzero(self == num)
 
 
     @property
