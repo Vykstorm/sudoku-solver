@@ -126,6 +126,10 @@ class SudokuSection(np.ndarray):
         self.fill(0)
 
 
+    def flatten(self):
+        return self.view(type=np.ndarray).flatten()
+
+
     @property
     def empty_cells_count(self):
         return self.size - self.filled_cells_count
