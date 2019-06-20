@@ -211,6 +211,13 @@ class Sudoku(SudokuSection):
         def __delitem__(self, index):
             self.sudoku.__delitem__(self.index_parser.parse(index))
 
+        def __len__(self):
+            return 9
+
+        def __iter__(self):
+            for i in range(0, len(self)):
+                yield self[i]
+
 
     SquaresView = partial(UnitsView, index_parser=SudokuSquareIndexParser())
     RowsView = partial(UnitsView, index_parser=SudokuRowIndexParser())
