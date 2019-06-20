@@ -114,6 +114,8 @@ class SudokuSection(np.ndarray):
     def __delitem__(self, item):
         super().__setitem__(item, 0)
 
+    def __iter__(self):
+        return iter(self.flatten())
 
     def __eq__(self, other):
         return np.equal(self, other, subok=False)
