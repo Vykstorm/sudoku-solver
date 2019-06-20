@@ -6,7 +6,7 @@ from matplotlib.collections import LineCollection
 from itertools import product
 from functools import partial
 import collections.abc
-
+import re
 
 
 
@@ -226,6 +226,27 @@ class Sudoku(SudokuSection):
         '''
         nums = ((np.random.randint(9, size=81) + 1) * (np.random.random(81) >= 0.4)).reshape([9, 9])
         return Sudoku(nums)
+
+
+    @classmethod
+    def fromstring(cls, s):
+        '''
+        Creates a sudoku configuration from a string. The string must be a sequence of 81
+        integer values separated by spaces, carriage returns tabs or commas.
+
+        '''
+        return Sudoku(np.fromstring(re.sub('[\n\t, ]+', '-', s), sep='-', dtype=np.uint8).reshape([9, 9]))
+
+
+    @classmethod
+    def fromfile(cls, path):
+        '''
+        Its the same as
+        with open(path, 'r') as file:
+            return Sudoku.fromstring(file.read())
+        '''
+        with open(path, 'r') as f:
+            return cls.fromstring(f.read())
 
 
     def copy(self):

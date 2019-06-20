@@ -293,6 +293,10 @@ class TestSudoku(TestCase):
         self.assertFalse(b.solved)
 
 
+    def test_sudoku_fromstring(self):
+        a = Sudoku.random()
+        b = Sudoku.fromstring(', '.join(map(str, a.view(type=np.ndarray).flatten())))
+        self.assertTrue(np.all(a.view(type=np.ndarray) == b.view(type=np.ndarray)))
 
 if __name__ == '__main__':
     unittest.main()
