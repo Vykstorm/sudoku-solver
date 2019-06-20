@@ -253,5 +253,46 @@ class TestSudoku(TestCase):
             self.assertTrue(square.valid)
 
 
+    def test_sudoku_valid(self):
+        sudoku = Sudoku()
+        sudoku.clear()
+        self.assertTrue(sudoku.valid)
+        sudoku.rows[0] = 1
+        self.assertFalse(sudoku.valid)
+
+        sudoku = Sudoku([
+            [7, 9, 2, 5, 1, 8, 3, 4, 6],
+            [8, 6, 3, 7, 4, 0, 9, 1, 5],
+            [1, 5, 4, 9, 3, 6, 2, 7, 8],
+            [9, 8, 6, 3, 5, 7, 1, 2, 4],
+            [3, 7, 0, 2, 6, 4, 8, 5, 9],
+            [4, 2, 5, 8, 9, 1, 7, 6, 3],
+            [6, 3, 9, 1, 2, 5, 0, 8, 7],
+            [2, 4, 8, 6, 7, 0, 5, 3, 1],
+            [5, 1, 7, 4, 8, 3, 6, 9, 2]
+        ])
+        self.assertTrue(sudoku.valid)
+
+
+    def test_sudoku_solved(self):
+        a = Sudoku([
+            [7, 9, 2, 5, 1, 8, 3, 4, 6],
+            [8, 6, 3, 7, 4, 2, 9, 1, 5],
+            [1, 5, 4, 9, 3, 6, 2, 7, 8],
+            [9, 8, 6, 3, 5, 7, 1, 2, 4],
+            [3, 7, 1, 2, 6, 4, 8, 5, 9],
+            [4, 2, 5, 8, 9, 1, 7, 6, 3],
+            [6, 3, 9, 1, 2, 5, 4, 8, 7],
+            [2, 4, 8, 6, 7, 9, 5, 3, 1],
+            [5, 1, 7, 4, 8, 3, 6, 9, 2]
+        ])
+        self.assertTrue(a.solved)
+
+        b = a.copy()
+        del b.squares[1, 1]
+        self.assertFalse(b.solved)
+
+
+
 if __name__ == '__main__':
     unittest.main()
