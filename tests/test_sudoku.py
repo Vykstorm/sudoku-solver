@@ -23,6 +23,7 @@ class TestSudoku(TestCase):
         sudoku = Sudoku()
         for i, j, num in product(range(0, 9), range(0, 9), range(1, 10)):
             sudoku[i, j] = num
+            self.assertFalse(sudoku[i, j].empty)
             self.assertEqual(sudoku[i, j], num)
             self.assertRaises(Exception, sudoku.__setitem__, (i, j), -1)
 
@@ -37,6 +38,7 @@ class TestSudoku(TestCase):
             sudoku[i, j] = num
             del sudoku[i, j]
             self.assertEqual(sudoku[i, j], 0)
+            self.assertTrue(sudoku[i, j].empty)
 
 
     def test_sudoku_get_row(self):
@@ -234,6 +236,16 @@ class TestSudoku(TestCase):
             row = sudoku[i]
             self.assertTrue(frozenset(row.unique_numbers).issubset(frozenset(row)))
             self.assertFalse(0 in row.unique_numbers)
+
+
+    def test_sudoku_unit_valid(self):
+        sudoku = Sudoku()
+        for i in range(0, 9):
+            square = sudoku.squares[i]
+            square[:] = 1
+            self.assertFalse(square.valid)
+            square[:] = np.arange(1, 10).reshape([3, 3])
+            self.assertTrue(square.valid)
 
 
 if __name__ == '__main__':
