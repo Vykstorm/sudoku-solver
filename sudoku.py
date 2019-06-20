@@ -281,11 +281,12 @@ class Sudoku(SudokuSection):
 
 
         for i, j in product(range(0, 9), range(0, 9)):
-            if self[i, j] != 0:
-                valid = True
+            if not self[i, j].empty:
+                i // 3, j // 3
 
-                valid = not((self[i] == self[i, j]).sum() > 1 or (self[:, j] == self[i, j]).sum() > 1 or\
-                            (self[(i//3)*3:(i//3+1)*3, (j//3)*3:(j//3+1)*3] == self[i, j]).sum() > 1)
+                valid = np.sum(self.rows[i].numbers == self[i, j]) <= 1 and\
+                np.sum(self.columns[j].numbers == self[i, j]) <= 1 and\
+                np.sum(self.squares[i//3, j//3].numbers == self[i, j]) <= 1
 
                 ax.text(
                     j+0.5, 9-i-1+0.5, str(self[i, j]), horizontalalignment='center', verticalalignment='center',
