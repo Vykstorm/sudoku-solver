@@ -164,7 +164,7 @@ class SudokuUnit(SudokuSection):
 
     @property
     def valid(self):
-        return len(self.unique_numbers) == 9
+        return len(self.unique_numbers) == len(self.filled_cells_count)
 
 
 
