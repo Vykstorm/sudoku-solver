@@ -230,12 +230,17 @@ class TestSudoku(TestCase):
         self.assertTrue(sudoku.squares[0].empty)
 
 
-    def test_sudoku_section_unique_numbers(self):
+    def test_sudoku_section_numbers(self):
         sudoku = Sudoku.random()
         for i in range(0, 9):
             row = sudoku[i]
-            self.assertTrue(frozenset(row.unique_numbers).issubset(frozenset(row)))
-            self.assertFalse(0 in row.unique_numbers)
+            self.assertTrue(np.all(row[row != 0] == row.numbers))
+
+
+    def test_sudoku_section_unique_numbers(self):
+        sudoku = Sudoku.random()
+        for i in range(0, 9):
+            self.assertTrue(np.all(np.unique(sudoku[i].numbers) == sudoku[i].unique_numbers))
 
 
     def test_sudoku_unit_valid(self):

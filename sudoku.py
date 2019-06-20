@@ -141,10 +141,14 @@ class SudokuSection(np.ndarray):
 
 
     @property
+    def numbers(self):
+        cells = self.view(type=np.ndarray).flatten()
+        return cells[cells > 0]
+
+
+    @property
     def unique_numbers(self):
-        nums = set(np.unique(self))
-        nums.discard(0)
-        return np.array(list(nums), dtype=np.uint8)
+        return np.unique(self.numbers)
 
 
 
