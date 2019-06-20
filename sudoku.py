@@ -8,26 +8,56 @@ from functools import partial
 import collections.abc
 
 
-def check_value(value):
-    '''
-    This is a helper method used when changing the cell numbers of a sudoku.
-    It raises an exception if the given numbers are not valid: They must be in the
-    range 1 to 9 or 0 (to indicate an empty cell)
-    '''
-    try:
-        if isinstance(value, np.ndarray):
-            if not np.all(np.isin(value.flatten(), range(0, 10))):
-                raise ValueError()
-        elif isinstance(value, collections.abc.Iterable):
-            if any(map(lambda x: x not in range(0, 10), value)):
-                raise ValueError()
-        elif value not in range(0, 10):
-            raise ValueError()
-    except ValueError:
-        raise ValueError('All numbers in a sudoku are between 0 and 9 (0 indicates an empty cell)')
 
 
+class ListIndexParser:
+    def __init__(self, n):
+        self.n = n
 
+    def parse(self, index):
+        if not isinstance(index, int):
+            raise IndexError('Index must be an integer')
+
+        if index < 0:
+            index = self.n + index
+
+        if index < 0 or index >= self.n:
+            raise IndexError('Index out of bounds')
+
+        return index
+
+
+class SudokuRowIndexParser(ListIndexParser):
+    def __init__(self):
+        super().__init__(9)
+
+    def parse(self, index):
+        return super().parse(index), slice(None)
+
+
+class SudokuColumnIndexParser(ListIndexParser):
+    def __init__(self):
+        super().__init__(9)
+
+    def parse(self, index):
+        return slice(None), super().parse(index)
+
+
+class SudokuSquareIndexParser(ListIndexParser):
+    def __init__(self):
+        super().__init__(9)
+
+    def parse(self, index):
+        if not isinstance(index, int) and (not isinstance(index, tuple) or len(index) != 2 or not all(map(lambda x: isinstance(x, int), index))):
+            raise IndexError('Index must be an integer or a tuple of two integers')
+
+        if isinstance(index, int):
+            index = super().parse(index)
+            y, x = index // 3, index % 3
+        else:
+            y, x = map(ListIndexParser(3).parse, index)
+
+        return slice(y*3, (y+1)*3), slice(x*3, (x+1)*3)
 
 
 
@@ -44,9 +74,10 @@ class SudokuCell(np.uint8):
     @property
     def empty(self):
         '''
-        Returns True if this cell is empty (its the same as comparting it to zero)
+        Returns True if this cell is empty (its the same as comparing it to zero)
         '''
         return self == 0
+
 
 
 
@@ -64,7 +95,20 @@ class SudokuSection(np.ndarray):
 
 
     def __setitem__(self, item, value):
-        check_value(value)
+        def _check_value():
+            try:
+                if isinstance(value, np.ndarray):
+                    if not np.all(np.isin(value.flatten(), range(0, 10))):
+                        raise ValueError()
+                elif isinstance(value, collections.abc.Iterable):
+                    if any(map(lambda x: x not in range(0, 10), value)):
+                        raise ValueError()
+                elif value not in range(0, 10):
+                    raise ValueError()
+            except ValueError:
+                raise ValueError('All numbers in a sudoku must be between 0 and 9 (0 indicates an empty cell)')
+
+        _check_value()
         super().__setitem__(item, value)
 
 
@@ -133,86 +177,23 @@ class Sudoku(SudokuSection):
     sudoku[i, j] will be the cell at the ith row and jth column
     '''
 
-    class SquaresView:
-        def __init__(self, sudoku):
-            self.sudoku = sudoku
+    class UnitsView:
+        def __init__(self, sudoku, index_parser):
+            self.sudoku, self.index_parser = sudoku, index_parser
+
+        def __getitem__(self, index):
+            return SudokuUnit(self.sudoku.view(type=np.ndarray).__getitem__(self.index_parser.parse(index)))
+
+        def __setitem__(self, index, value):
+            self.sudoku.__setitem__(self.index_parser.parse(index), value)
+
+        def __delitem__(self, index):
+            self.sudoku.__delitem__(self.index_parser.parse(index))
 
 
-        def _get_indices(self, item):
-            try:
-                if isinstance(item, tuple):
-                    if len(item) != 2:
-                        raise IndexError()
-                    y, x = item
-                else:
-                    if not isinstance(item, int):
-                        raise IndexError()
-                    y, x = item // 3, item % 3
-
-                if y not in range(0, 3) or x not in range(0, 3):
-                    raise IndexError()
-
-                return slice(y*3, (y+1)*3), slice(x*3, (x+1)*3)
-            except IndexError:
-                raise IndexError(
-                    'You must pass a number in the range [0, 9) or '+
-                    'a pair of numbers in the range [0, 3) as an index to access sudoku squares')
-
-        def __getitem__(self, item):
-            return SudokuUnit(self.sudoku.view(type=np.ndarray).__getitem__(self._get_indices(item)))
-
-        def __setitem__(self, item, value):
-            self.sudoku.__setitem__(self._get_indices(item), value)
-
-        def __delitem__(self, item):
-            self.__getitem__(item).fill(0)
-
-
-    class RowsView:
-        def __init__(self, sudoku):
-            self.sudoku = sudoku
-
-        def _check_index(self, index):
-            if not isinstance(index, int) or index not in range(0, 9):
-                raise IndexError(
-                    'You must pass a number in the range [0, 9) '+
-                    'as an index to access sudoku rows')
-
-        def __getitem__(self, item):
-            self._check_index(item)
-            return SudokuUnit(self.sudoku.view(type=np.ndarray).__getitem__(item))
-
-        def __setitem__(self, item, value):
-            self._check_index(item)
-            self.sudoku[item] = value
-
-        def __delitem__(self, item):
-            self._check_index(item)
-            del self.sudoku[item]
-
-
-    class ColumnsView:
-        def __init__(self, sudoku):
-            self.sudoku = sudoku
-
-        def _check_index(self, index):
-            if not isinstance(index, int) or index not in range(0, 9):
-                raise IndexError(
-                    'You must pass a number in the range [0, 9) '+
-                    'as an index to access sudoku columns')
-
-        def __getitem__(self, item):
-            self._check_index(item)
-            return SudokuUnit(self.sudoku.view(type=np.ndarray).__getitem__((slice(None), item)))
-
-        def __setitem__(self, item, value):
-            self._check_index(item)
-            self.sudoku[:, item] = value
-
-        def __delitem__(self, item):
-            self._check_index(item)
-            del self.sudoku[:, item]
-
+    SquaresView = partial(UnitsView, index_parser=SudokuSquareIndexParser())
+    RowsView = partial(UnitsView, index_parser=SudokuRowIndexParser())
+    ColumnsView = partial(UnitsView, index_parser=SudokuColumnIndexParser())
 
 
 

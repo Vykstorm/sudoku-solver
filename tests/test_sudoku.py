@@ -4,7 +4,7 @@
 import unittest
 from unittest import TestCase
 import numpy as np
-from sudoku import Sudoku, SudokuCell, SudokuSection
+from sudoku import Sudoku, SudokuCell, SudokuSection, SudokuUnit
 from itertools import product
 
 
@@ -46,20 +46,29 @@ class TestSudoku(TestCase):
             self.assertEqual(sudoku[i].ndim, 1)
             self.assertEqual(len(sudoku[i]), 9)
 
+            self.assertIsInstance(sudoku.rows[i], SudokuUnit)
+            self.assertEqual(sudoku.rows[i].ndim, 1)
+            self.assertEqual(sudoku.rows[i].size, 9)
+
+
 
     def test_sudoku_set_row(self):
         sudoku = Sudoku()
         for i, num in product(range(0, 9), range(1, 10)):
             sudoku[i] = num
             self.assertTrue(np.all(sudoku[i] == num))
+            sudoku.rows[i] = 9-num
+            self.assertTrue(np.all(sudoku.rows[i] == 9-num))
 
             sudoku[i] = range(1, 10)
             self.assertTrue(np.all(sudoku[i] == range(1, 10)))
+            sudoku.rows[i] = range(9, 0, -1)
+            self.assertTrue(np.all(sudoku.rows[i] == range(9, 0, -1)))
 
         for i in range(0, 9):
-            row = sudoku[i]
             for j in range(0, 9):
-                self.assertRaises(Exception, row.__setitem__, j, -1)
+                self.assertRaises(Exception, sudoku[i].__setitem__, j, -1)
+                self.assertRaises(Exception, sudoku.rows[i].__setitem__, j, -1)
 
 
     def test_sudoku_del_row(self):
@@ -69,6 +78,10 @@ class TestSudoku(TestCase):
             del sudoku[i]
             self.assertTrue(np.all(sudoku[i] == 0))
 
+            sudoku.rows[i] = num
+            del sudoku.rows[i]
+            self.assertTrue(np.all(sudoku.rows[i] == 0))
+
 
     def test_sudoku_get_column(self):
         sudoku = Sudoku()
@@ -77,20 +90,28 @@ class TestSudoku(TestCase):
             self.assertEqual(sudoku[:, j].ndim, 1)
             self.assertEqual(len(sudoku[:, j]), 9)
 
+            self.assertIsInstance(sudoku.columns[j], SudokuUnit)
+            self.assertEqual(sudoku.columns[j].ndim, 1)
+            self.assertEqual(sudoku.columns[j].size, 9)
+
 
     def test_sudoku_set_column(self):
         sudoku = Sudoku()
         for j, num in product(range(0, 9), range(1, 10)):
             sudoku[:, j] = num
             self.assertTrue(np.all(sudoku[:, j] == num))
+            sudoku.columns[j] = 9-num
+            self.assertTrue(np.all(sudoku.columns[j] == 9-num))
 
             sudoku[:, j] = range(1, 10)
             self.assertTrue(np.all(sudoku[:, j] == range(1, 10)))
+            sudoku.columns[j] = range(9, 0, -1)
+            self.assertTrue(np.all(sudoku.columns[j] == range(9, 0, -1)))
 
         for j in range(0, 9):
-            col = sudoku[:, j]
             for i in range(0, 9):
-                self.assertRaises(Exception, col.__setitem__, i, -1)
+                self.assertRaises(Exception, sudoku[:, j].__setitem__, i, -1)
+                self.assertRaises(Exception, sudoku.columns[j].__setitem__, i, -1)
 
 
     def test_sudoku_del_column(self):
@@ -99,6 +120,10 @@ class TestSudoku(TestCase):
             sudoku[:, j] = num
             del sudoku[:, j]
             self.assertTrue(np.all(sudoku[:, j] == 0))
+
+            sudoku.columns[j] = num
+            del sudoku.columns[j]
+            self.assertTrue(np.all(sudoku.columns[j] == 0))
 
 
     def test_sudoku_copy(self):
@@ -114,13 +139,13 @@ class TestSudoku(TestCase):
         sudoku = Sudoku()
         for k in range(0, 9):
             square = sudoku.squares[k]
-            self.assertIsInstance(square, SudokuSection)
+            self.assertIsInstance(square, SudokuUnit)
             self.assertEqual(square.ndim, 2)
             self.assertEqual(len(square.flatten()), 9)
 
         for y, x in product(range(0, 3), range(0, 3)):
             square = sudoku.squares[y, x]
-            self.assertIsInstance(square, SudokuSection)
+            self.assertIsInstance(square, SudokuUnit)
             self.assertEqual(square.ndim, 2)
             self.assertEqual(len(square.flatten()), 9)
 
