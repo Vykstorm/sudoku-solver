@@ -95,20 +95,19 @@ class SudokuSection(np.ndarray):
 
 
     def __setitem__(self, item, value):
-        def _check_value():
-            try:
-                if isinstance(value, np.ndarray):
-                    if not np.all(np.isin(value.flatten(), range(0, 10))):
-                        raise ValueError()
-                elif isinstance(value, collections.abc.Iterable):
-                    if any(map(lambda x: x not in range(0, 10), value)):
-                        raise ValueError()
-                elif value not in range(0, 10):
+        try:
+            if isinstance(value, int):
+                if not value in range(0, 10):
                     raise ValueError()
-            except ValueError:
-                raise ValueError('All numbers in a sudoku must be between 0 and 9 (0 indicates an empty cell)')
 
-        _check_value()
+            value = np.array(value, dtype=np.uint8)
+
+            if not np.all(np.isin(value.flatten(), range(0, 10))):
+                raise ValueError()
+
+        except ValueError:
+            raise ValueError('All numbers in a sudoku must be between 0 and 9 (0 indicates an empty cell)')
+
         super().__setitem__(item, value)
 
 
@@ -164,7 +163,7 @@ class SudokuUnit(SudokuSection):
 
     @property
     def valid(self):
-        return len(self.unique_numbers) == len(self.filled_cells_count)
+        return len(self.unique_numbers) == self.filled_cells_count
 
 
 
@@ -202,9 +201,12 @@ class Sudoku(SudokuSection):
 
 
     def __new__(cls, values=None):
-        return np.zeros(shape=(9, 9), dtype=np.uint8).view(type=Sudoku)
+        sudoku = np.zeros(shape=(9, 9), dtype=np.uint8).view(type=Sudoku)
+        if values is not None:
+            sudoku[:] = values
+        return sudoku
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__()
         self.squares = self.SquaresView(self)
         self.rows = self.RowsView(self)
@@ -217,19 +219,36 @@ class Sudoku(SudokuSection):
         This method returns a sudoku with some of its cells filled randomly with
         numbers and the rest are left empty (this is used for testing purposes)
         '''
-        nums = (np.random.randint(9, size=81) + 1) * (np.random.random(81) >= 0.4)
-        sudoku = Sudoku()
-        sudoku[:] = nums.reshape([9, 9])
-        return sudoku
+        nums = ((np.random.randint(9, size=81) + 1) * (np.random.random(81) >= 0.4)).reshape([9, 9])
+        return Sudoku(nums)
 
 
     def copy(self):
         '''
         Make a copy of this sudoku; return another sudoku instance with the same values
         '''
-        return np.copy(self).view(type=Sudoku)
+        return Sudoku(self.view(type=np.ndarray))
 
 
+    @property
+    def valid(self):
+        '''
+        Returns True if this instance is a valid sudoku configuration. It is valid if
+        for any row, column or square, there are no number repetitions.
+        '''
+        for k in range(0, 9):
+            if not self.rows[k].valid or not self.columns[k].valid or not self.squares[k].valid:
+                return False
+        return True
+
+
+    @property
+    def solved(self):
+        '''
+        Returns True if the sudoku is solved. It is considered solved if its a valid
+        configuration (valid is True) and all its cells are filled
+        '''
+        return self.full and self.valid
 
 
     def show(self):
