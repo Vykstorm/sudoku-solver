@@ -191,6 +191,26 @@ class TestSudoku(TestCase):
             self.assertFalse((sudoku[i, j] == 0) ^ sudoku[i, j].empty)
 
 
+    def test_sudoku_cell_row_index(self):
+        sudoku = Sudoku.random()
+        for i, j in product(range(0, 9), range(0, 9)):
+            self.assertEqual(i, sudoku[i, j].row_index)
+
+
+    def test_sudoku_cell_column_index(self):
+        sudoku = Sudoku.random()
+        for i, j in product(range(0, 9), range(0, 9)):
+            self.assertEqual(j, sudoku[i, j].column_index)
+
+
+    def test_sudoku_cell_square_index(self):
+        sudoku = Sudoku.random()
+        for i, j in product(range(0, 9), range(0, 9)):
+            k = (i // 3) * 3 + j // 3
+            self.assertEqual(k, sudoku[i, j].square_index)
+
+
+
     def test_sudoku_section_empty_cells_count(self):
         sudoku = Sudoku.random()
         for i in range(0, 9):
@@ -235,12 +255,6 @@ class TestSudoku(TestCase):
         for i in range(0, 9):
             row = sudoku[i]
             self.assertTrue(np.all(row[row != 0] == row.numbers))
-
-
-    def test_sudoku_section_unique_numbers(self):
-        sudoku = Sudoku.random()
-        for i in range(0, 9):
-            self.assertTrue(np.all(np.unique(sudoku[i].numbers) == sudoku[i].unique_numbers))
 
 
     def test_sudoku_unit_valid(self):
@@ -297,6 +311,43 @@ class TestSudoku(TestCase):
         a = Sudoku.random()
         b = Sudoku.fromstring(', '.join(map(str, a.view(type=np.ndarray).flatten())))
         self.assertTrue(np.all(a.view(type=np.ndarray) == b.view(type=np.ndarray)))
+
+
+
+    def test_sudoku_iter(self):
+        sudoku = Sudoku.random()
+        self.assertEqual(list(sudoku), list(sudoku.flatten().view(type=np.ndarray)))
+
+
+    def test_sudoku_iter_row(self):
+        sudoku = Sudoku.random()
+        for i in range(0, 9):
+            self.assertEqual(list(sudoku[i]), list(sudoku[i].view(type=np.ndarray)))
+            self.assertEqual(list(sudoku.rows[i]), list(sudoku[i].view(type=np.ndarray)))
+
+
+        for i, row in zip(range(0, 9), sudoku.rows):
+            self.assertEqual(list(sudoku.rows[i]), list(row))
+
+
+    def test_sudoku_iter_column(self):
+        sudoku = Sudoku.random()
+        for j in range(0, 9):
+            self.assertEqual(list(sudoku[:, j]), list(sudoku[:, j].view(type=np.ndarray)))
+            self.assertEqual(list(sudoku.columns[j]), list(sudoku[:, j].view(type=np.ndarray)))
+
+        for j, col in zip(range(0, 9), sudoku.columns):
+            self.assertEqual(list(sudoku.columns[j]), list(col))
+
+
+    def test_sudoku_iter_square(self):
+        sudoku = Sudoku.random()
+
+        for k, square in zip(range(0, 9), sudoku.squares):
+            self.assertEqual(list(square), list(sudoku.squares[k].view(type=np.ndarray).flatten()))
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
