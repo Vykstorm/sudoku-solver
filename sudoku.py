@@ -67,9 +67,13 @@ class SudokuCell(np.uint8):
     '''
     Instances of this class represents a single cell of an arbitrary sudoku configuration
     '''
-    def __new__(cls, value):
+    def __new__(cls, sudoku, index, value):
         return super(SudokuCell, cls).__new__(cls, value)
 
+    def __init__(self, sudoku, index, value):
+        self._sudoku, self.row_index, self.column_index = sudoku, index // 9, index % 9
+        self.col_index = self.column_index
+        self.square_index = (self.row_index // 3)*3 + self.column_index // 3
 
     @property
     def empty(self):
@@ -85,13 +89,19 @@ class SudokuSection(np.ndarray):
     '''
     Objects of this class are subarray of cells of an arbitrary sudoku configuration
     '''
-    def __new__(cls, values):
+    def __new__(cls, sudoku, indices, values):
         return values.view(type=SudokuSection)
+
+    def __init__(self, sudoku, indices, values):
+        self._sudoku, self._indices = sudoku, indices
 
 
     def __getitem__(self, item):
-        value = self.view(type=np.ndarray).__getitem__(item)
-        return SudokuSection(value) if isinstance(value, np.ndarray) else SudokuCell(value)
+        values = self.view(type=np.ndarray).__getitem__(item)
+        indices = self._indices.__getitem__(item)
+        if isinstance(values, np.ndarray):
+            return SudokuSection(self._sudoku, indices, values)
+        return SudokuCell(self._sudoku, indices, values)
 
 
     def __setitem__(self, item, value):
@@ -175,14 +185,13 @@ class SudokuUnit(SudokuSection):
     An object of this class represent a single row, column or square of an
     arbitrary sudoku configuration (all of them have a fixed size of 9 numbers)
     '''
-    def __new__(cls, values):
+    def __new__(cls, sudoku, indices, values):
         return values.view(type=SudokuUnit)
 
 
     @property
     def valid(self):
         return len(self.unique_numbers) == self.filled_cells_count
-
 
 
 
@@ -203,7 +212,12 @@ class Sudoku(SudokuSection):
             self.sudoku, self.index_parser = sudoku, index_parser
 
         def __getitem__(self, index):
-            return SudokuUnit(self.sudoku.view(type=np.ndarray).__getitem__(self.index_parser.parse(index)))
+            index = self.index_parser.parse(index)
+            return SudokuUnit(
+                self.sudoku,
+                self.sudoku._indices.__getitem__(index),
+                self.sudoku.view(type=np.ndarray).__getitem__(index)
+            )
 
         def __setitem__(self, index, value):
             self.sudoku.__setitem__(self.index_parser.parse(index), value)
@@ -227,15 +241,16 @@ class Sudoku(SudokuSection):
 
     def __new__(cls, values=None):
         sudoku = np.zeros(shape=(9, 9), dtype=np.uint8).view(type=Sudoku)
-        if values is not None:
-            sudoku[:] = values
         return sudoku
 
-    def __init__(self, *args, **kwargs):
-        super().__init__()
+    def __init__(self, values=None):
+        super().__init__(self, np.arange(0, 81).reshape([9, 9]), self.view(type=np.ndarray))
         self.squares = self.SquaresView(self)
         self.rows = self.RowsView(self)
         self.columns = self.cols = self.ColumnsView(self)
+
+        if values is not None:
+            self.__setitem__(slice(None), values)
 
 
     @classmethod
