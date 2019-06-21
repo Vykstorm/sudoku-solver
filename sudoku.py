@@ -109,7 +109,7 @@ class SudokuCell(np.uint8):
 
 
     @property
-    def remaining_numbers(self):
+    def avaliable_numbers(self):
         assert self == 0
         return reduce(operator.__and__, map(operator.attrgetter('remaining_numbers'), [self.row, self.column, self.square]))
 
@@ -376,14 +376,11 @@ class Sudoku(SudokuSection):
 
 
         for i, j in product(range(0, 9), range(0, 9)):
-            if not self[i, j].empty:
-                valid = self.rows[i].count(self[i, j]) <= 1 and\
-                self.columns[j].count(self[i, j]) <= 1 and\
-                self.squares[i // 3, j // 3].count(self[i, j]) <= 1
-
-                ax.text(
-                    j+0.5, 9-i-1+0.5, str(self[i, j]), horizontalalignment='center', verticalalignment='center',
-                    fontsize='xx-large', color='black' if valid else 'red')
+            if self[i, j] == 0:
+                continue
+            ax.text(
+                j+0.5, 9-i-1+0.5, str(self[i, j]), horizontalalignment='center', verticalalignment='center',
+                fontsize='xx-large', color='black' if self[i, j].valid else 'red')
 
         plt.xlim([0, 9])
         plt.ylim([0, 9])
