@@ -75,6 +75,7 @@ class SudokuCell(np.uint8):
         self.col_index = self.column_index
         self.square_index = (self.row_index // 3)*3 + self.column_index // 3
 
+
     @property
     def empty(self):
         '''
@@ -174,9 +175,12 @@ class SudokuSection(np.ndarray):
 
     @property
     def unique_numbers(self):
-        return np.unique(self.numbers)
+        return frozenset(self.numbers)
 
 
+    @property
+    def remaining_numbers(self):
+        return frozenset(range(1, 10)) - self.unique_numbers
 
 
 
