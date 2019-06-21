@@ -210,6 +210,16 @@ class TestSudoku(TestCase):
             self.assertEqual(k, sudoku[i, j].square_index)
 
 
+    def test_sudoku_cell_avaliable_numbers(self):
+        sudoku = Sudoku.random()
+        for i, j in product(range(0, 9), range(0, 9)):
+            if sudoku[i, j] != 0:
+                continue
+
+            k = (i // 3) * 3 + j // 3
+            remaining_nums = sudoku.rows[i].remaining_numbers & sudoku.cols[j].remaining_numbers & sudoku.squares[k].remaining_numbers
+            self.assertEqual(remaining_nums, sudoku[i, j].avaliable_numbers)
+
 
     def test_sudoku_section_empty_cells_count(self):
         sudoku = Sudoku.random()
