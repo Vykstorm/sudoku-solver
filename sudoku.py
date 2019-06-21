@@ -4,9 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from itertools import product
-from functools import partial
+from functools import partial, reduce
 import collections.abc
 import re
+import operator
 
 
 
@@ -15,8 +16,9 @@ class ListIndexParser:
         self.n = n
 
     def parse(self, index):
-        if not isinstance(index, int):
+        if not hasattr(index, '__int__'):
             raise IndexError('Index must be an integer')
+        index = int(index)
 
         if index < 0:
             index = self.n + index
@@ -48,10 +50,10 @@ class SudokuSquareIndexParser(ListIndexParser):
         super().__init__(9)
 
     def parse(self, index):
-        if not isinstance(index, int) and (not isinstance(index, tuple) or len(index) != 2 or not all(map(lambda x: isinstance(x, int), index))):
+        if not hasattr(index, '__int__') and (not isinstance(index, tuple) or len(index) != 2 or not all(map(lambda x: hasattr(x, '__int__'), index))):
             raise IndexError('Index must be an integer or a tuple of two integers')
 
-        if isinstance(index, int):
+        if hasattr(index, '__int__'):
             index = super().parse(index)
             y, x = index // 3, index % 3
         else:
@@ -82,6 +84,34 @@ class SudokuCell(np.uint8):
         Returns True if this cell is empty (its the same as comparing it to zero)
         '''
         return self == 0
+
+
+    @property
+    def row(self):
+        return self._sudoku.rows[self.row_index]
+
+    @property
+    def column(self):
+        return self._sudoku.columns[self.column_index]
+
+    col = column
+
+    @property
+    def square(self):
+        return self._sudoku.squares[self.square_index]
+
+
+    @property
+    def valid(self):
+        if self == 0:
+            return True
+        return all(map(lambda unit: unit.count(self) == 1, [self.row, self.column, self.square]))
+
+
+    @property
+    def remaining_numbers(self):
+        assert self == 0
+        return reduce(operator.__and__, map(operator.attrgetter('remaining_numbers'), [self.row, self.column, self.square]))
 
 
 
