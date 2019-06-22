@@ -33,37 +33,37 @@ class BacktrackingSudokuSolver:
             score[i, j] = 10 - len(nums)
 
 
-        # Iterate over each cell from maximum to minimum score
-        for index in reversed(np.argsort(score.flatten())):
-            i, j = index // 9, index % 9
-            cell = sudoku[i, j]
-            if cell != 0:
-                continue
+        # Get a cell with minimum score
+        index = np.argmax(score.flatten())
+        i, j = index // 9, index % 9
+        cell = sudoku[i, j]
 
-            nums = cell.avaliable_numbers
-            if len(nums) == 1:
-                # Only 1 possible number can go in this cell. No need to copy sudoku
-                # configuration for backtracking
-                sudoku[i, j] = next(iter(nums))
-                return self.solve(sudoku)
+        # All possible numbers that can be placed in the selected cell
+        nums = cell.avaliable_numbers
 
-            # More than 1 possible values can go to the current cell...
+        if len(nums) == 1:
+            # Only 1 possible number. No need to copy sudoku
+            # configuration for backtracking
+            sudoku[i, j] = next(iter(nums))
+            return self.solve(sudoku)
 
-            # Make a copy of the current sudoku configuration
-            other = sudoku.copy()
+        # More than 1 possible values can go to the current cell...
 
-            # Test each possible value for the cell
-            for num in nums:
-                try:
-                    # Set the cell's number
-                    other[i, j] = num
+        # Make a copy of the current sudoku configuration
+        other = sudoku.copy()
 
-                    # Call this function recursively. If the number we added to the
-                    # cell is not valid, this will raise an exception
-                    return self.solve(other)
-                except ValueError:
-                    # Restore old configuration
-                    del other[i, j]
+        # Test each possible value for the cell
+        for num in nums:
+            try:
+                # Set the cell's number
+                other[i, j] = num
+
+                # Call this function recursively. If the number we added to the
+                # cell is not valid, this will raise an exception
+                return self.solve(other)
+            except ValueError:
+                # Restore old configuration
+                del other[i, j]
 
         # No solutions found
         raise ValueError()
