@@ -10,7 +10,7 @@ DATASET_URL = '/home/vykstorm/Datasets/sudoku/sudoku.csv'
 
 
 @singleton
-class Dataset:
+class SudokuDataset:
     '''
     This class provides a database of sudokus Each entry is a pair of sudoku configurations:
     The sudoku unsolved and solved. It 1M entries
