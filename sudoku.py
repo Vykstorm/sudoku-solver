@@ -131,14 +131,12 @@ class SudokuSection(np.ndarray):
     '''
     Objects of this class are subarray of cells of an arbitrary sudoku configuration
     '''
-    def __new__(cls, sudoku, indices=None, values=None):
+    def __new__(cls, sudoku, indices, values=None):
         if values is None:
             values = sudoku
         return values.view(type=SudokuSection)
 
-    def __init__(self, sudoku, indices=None, values=None):
-        if indices is None:
-            indices = np.arange(0, 81).reshape([9, 9])
+    def __init__(self, sudoku, indices, values=None):
         self._sudoku, self._indices = sudoku, indices
 
 
@@ -291,9 +289,9 @@ class Sudoku(SudokuSection):
         return np.array(values, copy=True, subok=True)
 
 
-
+    indices = np.arange(0, 81).reshape([9, 9])
     def __init__(self, values=None):
-        super().__init__(self)
+        super().__init__(self, indices=self.indices)
         self.squares = self.SquaresView(self)
         self.rows = self.RowsView(self)
         self.columns = self.cols = self.ColumnsView(self)
