@@ -19,7 +19,7 @@ class SudokuDataset:
     def __init__(self):
         pass
 
-    def samples(self, shuffle=True, return_solutions=True, random_seed=None):
+    def get_samples(self, shuffle=True, return_solutions=True, random_seed=None):
         '''
         Creates an iterator that returns samples from this database
 
@@ -65,7 +65,7 @@ class SudokuDataset:
 
 if __name__ == '__main__':
     dataset = Dataset()
-    quizz, solution = next(dataset.samples())
+    quizz, solution = next(dataset.get_samples())
     print("Sudoku:\n")
     print(quizz)
     print('\n\nSolution:\n')
