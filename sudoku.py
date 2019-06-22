@@ -16,8 +16,8 @@ class ListIndexParser:
         self.n = n
 
     def parse(self, index):
-        if not hasattr(index, '__int__'):
-            raise IndexError('Index must be an integer')
+        assert hasattr(index, '__int__')
+
         index = int(index)
 
         if index < 0:
@@ -50,8 +50,7 @@ class SudokuSquareIndexParser(ListIndexParser):
         super().__init__(9)
 
     def parse(self, index):
-        if not hasattr(index, '__int__') and (not isinstance(index, tuple) or len(index) != 2 or not all(map(lambda x: hasattr(x, '__int__'), index))):
-            raise IndexError('Index must be an integer or a tuple of two integers')
+        assert hasattr(index, '__int__') or (isinstance(index, tuple) and len(index) == 2 and all(map(lambda x: hasattr(x, '__int__'), index)))
 
         if hasattr(index, '__int__'):
             index = super().parse(index)
@@ -73,9 +72,7 @@ class SudokuCell(np.uint8):
         return super(SudokuCell, cls).__new__(cls, value)
 
     def __init__(self, sudoku, index, value):
-        self._sudoku, self.row_index, self.column_index = sudoku, index // 9, index % 9
-        self.col_index = self.column_index
-        self.square_index = (self.row_index // 3)*3 + self.column_index // 3
+        self._sudoku, self._index = sudoku, index
 
 
     @property
@@ -85,6 +82,19 @@ class SudokuCell(np.uint8):
         '''
         return self == 0
 
+    @property
+    def row_index(self):
+        return self._index // 9
+
+    @property
+    def column_index(self):
+        return self._index % 9
+
+    col_index = column_index
+
+    @property
+    def square_index(self):
+        return (self.row_index // 3) * 3 + self.column_index // 3
 
     @property
     def row(self):
@@ -136,18 +146,12 @@ class SudokuSection(np.ndarray):
 
 
     def __setitem__(self, item, value):
-        try:
+        if __debug__:
             if isinstance(value, int):
-                if not value in range(0, 10):
-                    raise ValueError()
+                assert value in range(0, 10)
 
             value = np.array(value, dtype=np.uint8)
-
-            if not np.all(np.isin(value.flatten(), range(0, 10))):
-                raise ValueError()
-
-        except ValueError:
-            raise ValueError('All numbers in a sudoku must be between 0 and 9 (0 indicates an empty cell)')
+            assert np.all(np.isin(value.flatten(), range(0, 10)))
 
         super().__setitem__(item, value)
 
