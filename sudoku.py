@@ -1,6 +1,7 @@
 
 
 import numpy as np
+from numpy import ndarray
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from itertools import product
@@ -130,10 +131,14 @@ class SudokuSection(np.ndarray):
     '''
     Objects of this class are subarray of cells of an arbitrary sudoku configuration
     '''
-    def __new__(cls, sudoku, indices, values):
+    def __new__(cls, sudoku, indices=None, values=None):
+        if values is None:
+            values = sudoku
         return values.view(type=SudokuSection)
 
-    def __init__(self, sudoku, indices, values):
+    def __init__(self, sudoku, indices=None, values=None):
+        if indices is None:
+            indices = np.arange(0, 81).reshape([9, 9])
         self._sudoku, self._indices = sudoku, indices
 
 
@@ -278,17 +283,21 @@ class Sudoku(SudokuSection):
 
 
     def __new__(cls, values=None):
-        sudoku = np.zeros(shape=(9, 9), dtype=np.uint8).view(type=Sudoku)
-        return sudoku
+        if values is None or not isinstance(values, Sudoku):
+            sudoku = np.zeros(shape=(9, 9), dtype=np.uint8).view(type=Sudoku)
+            if values is not None:
+                np.put(sudoku, np.arange(0, 81), values)
+            return sudoku
+        return np.array(values, copy=True, subok=True)
+
+
 
     def __init__(self, values=None):
-        super().__init__(self, np.arange(0, 81).reshape([9, 9]), self.view(type=np.ndarray))
+        super().__init__(self)
         self.squares = self.SquaresView(self)
         self.rows = self.RowsView(self)
         self.columns = self.cols = self.ColumnsView(self)
 
-        if values is not None:
-            self.__setitem__(slice(None), values)
 
 
     @classmethod
@@ -326,7 +335,7 @@ class Sudoku(SudokuSection):
         '''
         Make a copy of this sudoku; return another sudoku instance with the same values
         '''
-        return Sudoku(self.view(type=np.ndarray))
+        return Sudoku(self)
 
 
     @property
