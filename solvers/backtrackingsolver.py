@@ -6,41 +6,44 @@ from types import SimpleNamespace
 
 class BacktrackingSudokuSolver:
     def __init__(self):
-        # Auxiliar array (to boost performance)
-        self.score = np.zeros([9, 9], dtype=np.uint8)
-
+        pass
 
     def solve(self, sudoku):
         if sudoku.full:
+            # If the sudoku is full, its already solved
             return sudoku
 
-        score = self.score
-        # Compute a score value for each cell
+        scores = np.zeros([9, 9], dtype=np.uint8)
+
+        # Iterate over all the cells in the sudoku
         for i, j in product(range(0, 9), range(0, 9)):
             cell = sudoku[i, j]
 
-            # Penality increases as the amout of numbers we can put in the cell increases
+            # We dont need to analyze already filled cells
             if cell != 0:
-                score[i, j] = 0
                 continue
 
+            # Get all possible numbers can add to the cell
             nums = cell.avaliable_numbers
+
             if len(nums) == 0:
                 # The sudoku configuration is not valid (the cell which is empty dont have
                 # any avaliable number)
                 raise ValueError()
 
             if len(nums) == 1:
-                # Only 1 possible number. No need to copy sudoku
-                # configuration for backtracking
+                # Only 1 possible number. Add the number to the cell and keep solving the sudoku
                 sudoku[i, j] = next(iter(nums))
                 return self.solve(sudoku)
 
-            score[i, j] = 10 - len(nums)
+            # More than 1 possible numbers that can be added to the cell. We can compute a score
+            # to later select the cell that has minimum avaliable numbers
+            scores[i, j] = 10 - len(nums)
 
 
-        # Get a cell with minimum score
-        index = np.argmax(score.flatten())
+        # Get a cell with maximum score
+        scores = scores.flatten()
+        index = np.random.choice(np.nonzero(scores == scores.max())[0])
         i, j = index // 9, index % 9
         cell = sudoku[i, j]
 
@@ -51,7 +54,7 @@ class BacktrackingSudokuSolver:
         other = sudoku.copy()
 
         # Test each possible value for the cell
-        for num in nums:
+        for num in np.random.permutation(nums):
             try:
                 # Set the cell's number
                 other[i, j] = num
@@ -89,7 +92,7 @@ if __name__ == '__main__':
         except ValueError:
             pass
 
-        print("Sudokus solved: {} / {} ({} %), {} msecs solve mean time".format(
+        print("Sudokus solved: {} / {} ({} %), {} secs solve mean time".format(
             solved_count, count, round((solved_count / count)*100, 1),
             str(round(elapsed_time / solved_count, 3))).rjust(8),
         end='\n')
