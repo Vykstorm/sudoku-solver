@@ -163,7 +163,8 @@ class SudokuSection(np.ndarray):
         super().__setitem__(item, 0)
 
     def __iter__(self):
-        return iter(self.flatten())
+        for index, value in zip(self.indices.flatten(), self.flatten()):
+            yield SudokuCell(self._sudoku, index, value)
 
     def __eq__(self, other):
         return np.equal(self, other, subok=False)
