@@ -267,16 +267,6 @@ class TestSudoku(TestCase):
             self.assertTrue(np.all(row[row != 0] == row.numbers))
 
 
-    def test_sudoku_unit_valid(self):
-        sudoku = Sudoku()
-        for i in range(0, 9):
-            square = sudoku.squares[i]
-            square[:] = 1
-            self.assertFalse(square.valid)
-            square[:] = np.arange(1, 10).reshape([3, 3])
-            self.assertTrue(square.valid)
-
-
     def test_sudoku_valid(self):
         sudoku = Sudoku()
         sudoku.clear()
