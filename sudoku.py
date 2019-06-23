@@ -114,15 +114,20 @@ class SudokuCell(np.uint8):
 
     @property
     def valid(self):
+        '''
+        Check if this cell is valid. If it a non empty cell, its valid if the number in it
+        is not repeated in its row, column or square. If it is an empty cell, its valid only if
+        there is at least 1 avaliable number in its row, column and square
+        '''
         if self == 0:
-            return True
+            return len(self.avaliable_numbers) > 0
         return all(map(lambda unit: unit.count(self) == 1, [self.row, self.column, self.square]))
 
 
     @property
     def avaliable_numbers(self):
         assert self == 0
-        return reduce(operator.__and__, map(operator.attrgetter('remaining_numbers'), [self.row, self.column, self.square]))
+        return reduce(operator.__and__, map(lambda unit: unit.remaining_numbers, [self.row, self.column, self.square]))
 
 
 
@@ -231,11 +236,6 @@ class SudokuUnit(SudokuSection):
         return values.view(type=SudokuUnit)
 
 
-    @property
-    def valid(self):
-        return len(self.unique_numbers) == self.filled_cells_count
-
-
 
 
 class Sudoku(SudokuSection):
@@ -341,10 +341,10 @@ class Sudoku(SudokuSection):
     def valid(self):
         '''
         Returns True if this instance is a valid sudoku configuration. It is valid if
-        for any row, column or square, there are no number repetitions.
+        all its cells are valid (check SudokuCell.valid docs)
         '''
-        for k in range(0, 9):
-            if not self.rows[k].valid or not self.columns[k].valid or not self.squares[k].valid:
+        for cell in self:
+            if not cell.valid:
                 return False
         return True
 
