@@ -30,6 +30,12 @@ class BacktrackingSudokuSolver:
                 # any avaliable number)
                 raise ValueError()
 
+            if len(nums) == 1:
+                # Only 1 possible number. No need to copy sudoku
+                # configuration for backtracking
+                sudoku[i, j] = next(iter(nums))
+                return self.solve(sudoku)
+
             score[i, j] = 10 - len(nums)
 
 
@@ -40,14 +46,6 @@ class BacktrackingSudokuSolver:
 
         # All possible numbers that can be placed in the selected cell
         nums = cell.avaliable_numbers
-
-        if len(nums) == 1:
-            # Only 1 possible number. No need to copy sudoku
-            # configuration for backtracking
-            sudoku[i, j] = next(iter(nums))
-            return self.solve(sudoku)
-
-        # More than 1 possible values can go to the current cell...
 
         # Make a copy of the current sudoku configuration
         other = sudoku.copy()
