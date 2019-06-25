@@ -1,5 +1,4 @@
 
-
 import numpy as np
 from numpy import ndarray
 import matplotlib.pyplot as plt
@@ -227,15 +226,6 @@ class SudokuSection(np.ndarray):
 
 
 
-class SudokuUnit(SudokuSection):
-    '''
-    An object of this class represent a single row, column or square of an
-    arbitrary sudoku configuration (all of them have a fixed size of 9 numbers)
-    '''
-    def __new__(cls, sudoku, indices, values):
-        return values.view(type=SudokuUnit)
-
-
 
 
 class Sudoku(SudokuSection):
@@ -255,7 +245,7 @@ class Sudoku(SudokuSection):
 
         def __getitem__(self, index):
             index = self.index_parser.parse(index)
-            return SudokuUnit(
+            return SudokuSection(
                 self.sudoku,
                 self.sudoku._indices.__getitem__(index),
                 self.sudoku.view(type=np.ndarray).__getitem__(index)

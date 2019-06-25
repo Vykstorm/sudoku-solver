@@ -4,7 +4,7 @@
 import unittest
 from unittest import TestCase
 import numpy as np
-from sudoku import Sudoku, SudokuCell, SudokuSection, SudokuUnit
+from sudoku import Sudoku, SudokuCell, SudokuSection
 from itertools import product
 
 
@@ -48,7 +48,7 @@ class TestSudoku(TestCase):
             self.assertEqual(sudoku[i].ndim, 1)
             self.assertEqual(len(sudoku[i]), 9)
 
-            self.assertIsInstance(sudoku.rows[i], SudokuUnit)
+            self.assertIsInstance(sudoku.rows[i], SudokuSection)
             self.assertEqual(sudoku.rows[i].ndim, 1)
             self.assertEqual(sudoku.rows[i].size, 9)
 
@@ -92,7 +92,7 @@ class TestSudoku(TestCase):
             self.assertEqual(sudoku[:, j].ndim, 1)
             self.assertEqual(len(sudoku[:, j]), 9)
 
-            self.assertIsInstance(sudoku.columns[j], SudokuUnit)
+            self.assertIsInstance(sudoku.columns[j], SudokuSection)
             self.assertEqual(sudoku.columns[j].ndim, 1)
             self.assertEqual(sudoku.columns[j].size, 9)
 
@@ -141,13 +141,13 @@ class TestSudoku(TestCase):
         sudoku = Sudoku()
         for k in range(0, 9):
             square = sudoku.squares[k]
-            self.assertIsInstance(square, SudokuUnit)
+            self.assertIsInstance(square, SudokuSection)
             self.assertEqual(square.ndim, 2)
             self.assertEqual(len(square.flatten()), 9)
 
         for y, x in product(range(0, 3), range(0, 3)):
             square = sudoku.squares[y, x]
-            self.assertIsInstance(square, SudokuUnit)
+            self.assertIsInstance(square, SudokuSection)
             self.assertEqual(square.ndim, 2)
             self.assertEqual(len(square.flatten()), 9)
 
