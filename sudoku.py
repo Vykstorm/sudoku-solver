@@ -1,4 +1,11 @@
+'''
+This module creates the helper class Sudoku which can be used to represent any arbitrary sudoku
+game configuration
+'''
 
+
+
+### Import statements
 import numpy as np
 from numpy import ndarray
 import matplotlib.pyplot as plt
@@ -11,6 +18,7 @@ import operator
 
 
 
+### Helper classes
 class ListIndexParser:
     def __init__(self, n):
         self.n = n
@@ -66,7 +74,7 @@ class SudokuSquareIndexParser(ListIndexParser):
 
 class SudokuCell(np.uint8):
     '''
-    Instances of this class represents a single cell of an arbitrary sudoku configuration
+    Instances of this class represents a single cell of an arbitrary sudoku configuration.
     '''
     def __new__(cls, sudoku, index, value):
         return super(SudokuCell, cls).__new__(cls, value)
@@ -78,54 +86,79 @@ class SudokuCell(np.uint8):
     @property
     def empty(self):
         '''
-        Returns True if this cell is empty (its the same as comparing it to zero)
+        Returns True if this cell is empty (its the same as comparing its value to zero)
         '''
         return self == 0
 
     @property
     def row_index(self):
+        '''
+        Returns the index of the row where this cell is located inside the sudoku
+        '''
         return self._index // 9
 
     @property
     def column_index(self):
+        '''
+        Returns the index of the column where this cell is located inside the sudoku
+        '''
         return self._index % 9
 
     col_index = column_index
 
     @property
     def square_index(self):
+        '''
+        Returns the index of the square where this cell is located inside the sudoku
+        '''
         return (self.row_index // 3) * 3 + self.column_index // 3
 
     @property
     def row(self):
+        '''
+        Returns the sudoku row that contains this cell
+        '''
         return self._sudoku.rows[self.row_index]
 
     @property
     def column(self):
+        '''
+        Returns the sudoku column that contains this cell
+        '''
         return self._sudoku.columns[self.column_index]
 
     col = column
 
     @property
     def square(self):
+        '''
+        Returns the sudoku square that contains this cell
+        '''
         return self._sudoku.squares[self.square_index]
 
 
     @property
     def valid(self):
         '''
-        Check if this cell is valid. If it a non empty cell, its valid if the number in it
-        is not repeated in its row, column or square. If it is an empty cell, its valid only if
-        there is at least 1 avaliable number in its row, column and square
+        Check if this cell is valid:
+        If this is a empty cell, returns True if we can put at least 1 number in this cell
+        without repeating it in its row, column or square.
+        Otherwise, its valid only if the number written on this cell is not repeated in its row,
+        column or square
         '''
         if self == 0:
-            return len(self.avaliable_numbers) > 0
+            return len(self.remaining_numbers) > 0
         return all(map(lambda unit: unit.count(self) == 1, [self.row, self.column, self.square]))
 
 
     @property
-    def avaliable_numbers(self):
-        assert self == 0
+    def remaining_numbers(self):
+        '''
+        If this cell is not empty, returns an empty frozenset. Otherwise, it returns all the numbers not
+        present in the row, column or square containing this cell as a frozenset instance
+        '''
+        if self != 0:
+            return frozenset()
         return reduce(operator.__and__, map(lambda unit: unit.remaining_numbers, [self.row, self.column, self.square]))
 
 
@@ -167,7 +200,7 @@ class SudokuSection(np.ndarray):
         super().__setitem__(item, 0)
 
     def __iter__(self):
-        for index, value in zip(self._indices.flatten(), self.flatten()):
+        for index, value in zip(self._indices.flatten(), self.view(type=np.ndarray).flatten()):
             yield SudokuCell(self._sudoku, index, value)
 
     def __eq__(self, other):
@@ -178,50 +211,82 @@ class SudokuSection(np.ndarray):
 
 
     def clear(self):
+        '''
+        Clear all the sudoku cells inside this section (set their values to 0)
+        '''
         self.fill(0)
 
 
     def flatten(self):
-        return self.view(type=np.ndarray).flatten()
+        '''
+        Returns a flattened version of this sudoku section
+        '''
+        if self.ndim == 1:
+            return self
+        return SudokuSection(self._sudoku, self._indices.flatten(), self.view(type=np.ndarray).flatten())
 
 
     @property
     def empty_cells_count(self):
+        '''
+        Returns the number of empty cells on this sudoku section
+        '''
         return self.size - self.filled_cells_count
 
 
     @property
     def filled_cells_count(self):
+        '''
+        Return the number of non empty cells on this sudoku section
+        '''
         return np.count_nonzero(self)
 
 
     @property
     def empty(self):
+        '''
+        Returns True if all the cells in this sudoku section are empty
+        '''
         return self.filled_cells_count == 0
 
 
     @property
     def full(self):
+        '''
+        Returns True if all the cells in this sudoku section are not empty
+        '''
         return self.empty_cells_count == 0
 
 
     def count(self, num):
+        '''
+        Count the number of times the given number appears on this sudoku section
+        '''
         return np.count_nonzero(self == num)
 
 
     @property
     def numbers(self):
+        '''
+        Returns all the numbers in this sudoku section
+        '''
         cells = self.view(type=np.ndarray).flatten()
         return cells[cells > 0]
 
 
     @property
     def unique_numbers(self):
+        '''
+        Returns all the numbers (removing repetitions) in this sudoku section
+        '''
         return frozenset(self.numbers)
 
 
     @property
     def remaining_numbers(self):
+        '''
+        Returns all the numbers that doesnt appear in this sudoku section
+        '''
         return frozenset(range(1, 10)) - self.unique_numbers
 
 
@@ -333,10 +398,7 @@ class Sudoku(SudokuSection):
         Returns True if this instance is a valid sudoku configuration. It is valid if
         all its cells are valid (check SudokuCell.valid docs)
         '''
-        for cell in self:
-            if not cell.valid:
-                return False
-        return True
+        return all([cell.valid for cell in self])
 
 
     @property
