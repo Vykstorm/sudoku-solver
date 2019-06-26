@@ -410,12 +410,10 @@ class Sudoku(SudokuSection):
         return self.full and self.valid
 
 
-    def show(self):
+    def draw(self):
         '''
-        Shows the sudoku on a matplotlib figure
+        Draws the sudoku on the current matplotlib figure axes
         '''
-        plt.figure(figsize=(5, 5))
-
 
         column_separators = LineCollection(
             [[(j, 0), (j, 9)] for j in range(1, 9) if j%3 != 0],
@@ -451,6 +449,15 @@ class Sudoku(SudokuSection):
         plt.xticks([])
         plt.yticks([])
 
+
+    def show(self, figsize=None):
+        '''
+        Shows this sudoku on a new matplotlib figure
+        '''
+        if figsize is None:
+            figsize = (5, 5)
+        plt.figure(figsize=figsize)
+        self.draw()
         plt.show()
 
 
