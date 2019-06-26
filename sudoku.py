@@ -243,6 +243,22 @@ class SudokuSection(np.ndarray):
 
 
     @property
+    def empty_cells(self):
+        '''
+        Returns all the empty cells on this section
+        '''
+        return self[self.view(type=np.ndarray) == 0]
+
+
+    @property
+    def filled_cells(self):
+        '''
+        Returns all non empty cells on this section
+        '''
+        return self[self.view(type=np.ndarray) != 0]
+
+
+    @property
     def empty(self):
         '''
         Returns True if all the cells in this sudoku section are empty
