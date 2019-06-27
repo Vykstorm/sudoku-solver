@@ -50,13 +50,9 @@ class SudokuDataset:
                         continue
                     solved = parse_sudoku(entry['solutions'])
 
-                    # Is solved really a solved sudoku?
-                    if not solved.solved:
-                        raise ValueError('Invalid sudoku solution found in dataset (not really solved)')
-
                     # The solved configuration is really the solution to the unsolved configuration?
-                    if not np.all(np.logical_or(unsolved == 0, solved == unsolved).flatten()):
-                        raise ValueError('Invalid sudoku solution found in dataset (is not the a valid solution for the sudoku)')
+                    if not (unsolved < solved and solved.full):
+                        raise ValueError('Invalid sudoku solution found in dataset')
 
                     yield unsolved, solved
 
