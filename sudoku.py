@@ -203,12 +203,6 @@ class SudokuSection(np.ndarray):
         for index, value in zip(self._indices.flatten(), self.view(type=np.ndarray).flatten()):
             yield SudokuCell(self._sudoku, index, value)
 
-    def __eq__(self, other):
-        return np.equal(self, other, subok=False)
-
-    def __ne__(self, other):
-        return np.not_equal(self, other, subok=False)
-
 
     def clear(self):
         '''
@@ -424,6 +418,20 @@ class Sudoku(SudokuSection):
         configuration (valid is True) and all its cells are filled
         '''
         return self.full and self.valid
+
+
+    def __lt__(self, other):
+        if not isinstance(other, Sudoku):
+            raise ValueError()
+
+        a, b = self.view(type=np.ndarray), other.view(type=np.ndarray)
+        return self.empty_cells_count > other.empty_cells_count and\
+            np.all(np.logical_or(a == 0, a == b))
+
+    def __gt__(self, other):
+        if not isinstance(other, Sudoku):
+            raise ValueError()
+        return other < self
 
 
     def draw(self):
