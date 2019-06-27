@@ -467,8 +467,29 @@ class TestSudoku(TestCase):
         self.assertTrue(np.all(a.view(type=np.ndarray) == b.view(type=np.ndarray)))
 
 
+    def test_sudoku_lower_than(self):
+        '''
+        Test the operator < and > on Sudoku class.
+        '''
+        a = Sudoku.random()
+        b = a.copy()
+        self.assertFalse(b < a)
+        self.assertFalse(a < b)
+        self.assertFalse(a > b)
+        self.assertFalse(b > a)
 
-
+        for i, j in product(range(0, 9), range(0, 9)):
+            if a[i, j].empty:
+                b[i, j] = 1
+                self.assertTrue(a < b)
+                self.assertTrue(b > a)
+                del b[i, j]
+            else:
+                del b[i, j]
+                self.assertTrue(b < a)
+                self.assertTrue(a > b)
+                b[i, j] = a[i, j]
+        
 
 if __name__ == '__main__':
     unittest.main()
