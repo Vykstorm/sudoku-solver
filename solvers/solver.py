@@ -33,6 +33,10 @@ class SudokuSolver:
         elapsed_time = 0.0
         failures_count = 0
 
+        accuracy = 0.0
+        solve_time = 0.0
+
+
         for sample, solution in islice(samples, n):
             count += 1
             try:
@@ -54,11 +58,15 @@ class SudokuSolver:
             except AssertionError:
                 failures_count += 1
 
-            # Print stats
-            info = []
-            info.append("{:2.2f}% accuracy".format(100 * solved_count / count))
+            accuracy = solved_count / count
             if solved_count > 0:
-                info.append("{:.3f} msecs/sample".format(elapsed_time / solved_count))
+                solve_time = elapsed_time / solved_count
+
+            # Print metrics
+            info = []
+            info.append("{:2.2f}% accuracy".format(100 * accuracy))
+            if solved_count > 0:
+                info.append("{:.3f} secs/sample".format(solve_time))
 
             if failures_count > 0:
                 info.append("{} failures".format(failures_count))
@@ -68,6 +76,8 @@ class SudokuSolver:
             print('    '.join([stat.ljust(20) for stat in info]), end='\r')
         print()
 
+        # Return dict with metrics
+        return dict(accuracy=accuracy, solve_time=solve_time, failures=failures_count)
 
 class SudokuIterativeSolver(SudokuSolver):
     '''
