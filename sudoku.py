@@ -15,6 +15,7 @@ from functools import partial, reduce
 import collections.abc
 import re
 import operator
+from visualization import SudokuPlot
 
 
 
@@ -161,6 +162,9 @@ class SudokuCell(np.uint8):
             return frozenset()
         return reduce(operator.__and__, map(lambda unit: unit.remaining_numbers, [self.row, self.column, self.square]))
 
+
+    def __str__(self):
+        return '' if self.empty else str(int(self))
 
 
 
@@ -434,44 +438,16 @@ class Sudoku(SudokuSection):
         return other < self
 
 
-    def draw(self):
+    @property
+    def plot(self):
+        return SudokuPlot(self)
+
+
+    def draw(self, *args, **kwargs):
         '''
-        Draws the sudoku on the current matplotlib figure axes
+        Its an alias of plot.draw()
         '''
-
-        column_separators = LineCollection(
-            [[(j, 0), (j, 9)] for j in range(1, 9) if j%3 != 0],
-            linewidths=1, colors='black', linestyle='solid')
-
-        row_separators = LineCollection(
-            [[(0, i), (9, i)] for i in range(1, 9) if i%3 != 0],
-            linewidths=1, colors='black', linestyle='solid')
-
-        vertical_square_separators = LineCollection(
-            [[(j, 0), (j, 9)] for j in range(0, 10) if j%3 == 0],
-            linewidths=2, colors='black', linestyle='solid')
-
-        horizontal_square_separators = LineCollection(
-            [[(0, i), (9, i)] for i in range(0, 10) if i%3 == 0],
-            linewidths=2, colors='black', linestyle='solid')
-
-
-        ax = plt.gca()
-        for collection in (column_separators, row_separators, vertical_square_separators, horizontal_square_separators):
-            ax.add_collection(collection)
-
-
-        for i, j in product(range(0, 9), range(0, 9)):
-            if self[i, j] == 0:
-                continue
-            ax.text(
-                j+0.5, 9-i-1+0.5, str(self[i, j]), horizontalalignment='center', verticalalignment='center',
-                fontsize='xx-large', color='black' if self[i, j].valid else 'red')
-
-        plt.xlim([0, 9])
-        plt.ylim([0, 9])
-        plt.xticks([])
-        plt.yticks([])
+        return self.plot.draw(*args, **kwargs)
 
 
     def show(self, figsize=None):
