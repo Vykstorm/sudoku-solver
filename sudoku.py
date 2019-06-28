@@ -73,15 +73,43 @@ class SudokuSquareIndexParser(ListIndexParser):
 
 
 
-class SudokuCell(np.uint8):
+class SudokuCell:
     '''
     Instances of this class represents a single cell of an arbitrary sudoku configuration.
     '''
-    def __new__(cls, sudoku, index, value):
-        return super(SudokuCell, cls).__new__(cls, value)
-
-    def __init__(self, sudoku, index, value):
+    def __init__(self, sudoku, index):
         self._sudoku, self._index = sudoku, index
+
+    @property
+    def value(self):
+        return int(self._sudoku.view(type=np.ndarray).flatten().__getitem__(self._index))
+
+    @value.setter
+    def value(self, num):
+        assert num in range(0, 10)
+        self._sudoku.view(type=np.ndarray).put(self._index, num)
+
+    def __int__(self):
+        return self.value
+
+    def __lt__(self, other):
+        return self.value < other
+
+    def __gt__(self, other):
+        return self.value > other
+
+    def __ge__(self, other):
+        return self.value >= other
+
+    def __le__(self, other):
+        return self.value <= other
+
+    def __eq__(self, other):
+        return self.value == other
+
+    def __ne__(self, other):
+        return self.value != other
+
 
 
     @property
@@ -89,7 +117,7 @@ class SudokuCell(np.uint8):
         '''
         Returns True if this cell is empty (its the same as comparing its value to zero)
         '''
-        return self == 0
+        return self.value == 0
 
     @property
     def row_index(self):
@@ -166,6 +194,9 @@ class SudokuCell(np.uint8):
     def __str__(self):
         return '' if self.empty else str(int(self))
 
+    def __repr__(self):
+        return str(self)
+
 
 
 class SudokuSection(np.ndarray):
@@ -184,9 +215,9 @@ class SudokuSection(np.ndarray):
     def __getitem__(self, item):
         values = self.view(type=np.ndarray).__getitem__(item)
         indices = self._indices.__getitem__(item)
-        if isinstance(values, np.ndarray):
+        if isinstance(indices, np.ndarray):
             return SudokuSection(self._sudoku, indices, values)
-        return SudokuCell(self._sudoku, indices, values)
+        return SudokuCell(self._sudoku, indices)
 
 
     def __setitem__(self, item, value):
@@ -204,8 +235,7 @@ class SudokuSection(np.ndarray):
         super().__setitem__(item, 0)
 
     def __iter__(self):
-        for index, value in zip(self._indices.flatten(), self.view(type=np.ndarray).flatten()):
-            yield SudokuCell(self._sudoku, index, value)
+        return map(partial(SudokuCell, self._sudoku), self._indices.flatten())
 
 
     def clear(self):

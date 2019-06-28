@@ -29,14 +29,13 @@ class TestSudoku(TestCase):
 
 
 
-    def test_sudoku_get_number(self):
+    def test_sudoku_get_cell(self):
         '''
         Accessing a single cell on the sudoku object via indexation, returns
         a SudokuCell instance
         '''
         sudoku = Sudoku()
         for i, j in product(range(0, 9), range(0, 9)):
-            self.assertIn(sudoku[i, j], range(0, 10))
             self.assertIsInstance(sudoku[i, j], SudokuCell)
 
 
@@ -67,6 +66,29 @@ class TestSudoku(TestCase):
         for i, j in product(range(0, 9), range(0, 9)):
             k = (i // 3) * 3 + j // 3
             self.assertEqual(k, sudoku[i, j].square_index)
+
+
+    def test_sudoku_cell_get_number(self):
+        '''
+        Property 'value' on SudokuCell instance can be used to retrieve its number
+        '''
+        sudoku = Sudoku.random()
+        for i, j in product(range(0, 9), range(0, 9)):
+            cell = sudoku[i, j]
+            self.assertEqual(cell.value, cell)
+            self.assertEqual(cell.value, int(cell))
+
+
+    def test_sudoku_cell_set_number(self):
+        '''
+        setter of 'value' property on SudokuCell instance can be used to change the sudoku number
+        directly
+        '''
+        sudoku = Sudoku()
+        for i, j, num in product(range(0, 9), range(0, 9), range(1, 10)):
+            cell = sudoku[i, j]
+            cell.value = num
+            self.assertEqual(cell, num)
 
 
     def test_sudoku_set_number(self):
@@ -489,7 +511,7 @@ class TestSudoku(TestCase):
                 self.assertTrue(b < a)
                 self.assertTrue(a > b)
                 b[i, j] = a[i, j]
-        
+
 
 if __name__ == '__main__':
     unittest.main()
