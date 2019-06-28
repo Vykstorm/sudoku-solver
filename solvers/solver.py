@@ -190,7 +190,7 @@ class BasicSudokuIterativeSolver(SudokuIterativeSolver):
     '''
     Basic sudoku iterative algorithm solver implementation.
     This is the baseline for the rest of the algorithms.
-    On each step, it iterates over all cells in the sudoku on each step, to find
+    On each step, it iterates over all cells in the sudoku to find
     an empty cell that can only have 1 possible value (not present in its row, column or square).
     Then assign that remaining value to the cell.
     '''
