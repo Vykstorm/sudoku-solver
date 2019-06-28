@@ -6,6 +6,7 @@ from itertools import product, islice
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from visualization import SudokuPlot
 
 
 class SudokuSolver:
@@ -116,7 +117,6 @@ class SudokuIterativeSolver(SudokuSolver):
         if not sudoku.valid:
             raise ValueError('You must pass a valid sudoku configuration to solve')
 
-        sudoku = sudoku.copy()
         steps = []
         steps.append(sudoku.copy())
 
@@ -135,15 +135,8 @@ class SudokuIterativeSolver(SudokuSolver):
             pass
 
 
-        # First draw the sudoku grid
-        Sudoku().draw()
 
-        # Create one label for each sudoku cell
-        labels = np.array([
-            plt.text(k % 9 + 0.5, 8 - k // 9 + 0.5, '', horizontalalignment='center', verticalalignment='center',
-                fontsize='xx-large', color='black')\
-            for k, value in zip(range(0, 81), sudoku.flatten())]).reshape([9, 9])
-
+        labels = steps[0].plot()
 
         def init():
             return labels.flatten()
@@ -154,7 +147,7 @@ class SudokuIterativeSolver(SudokuSolver):
             for i, j in product(range(0, 9), range(0, 9)):
                 # Update label text
                 label = labels[i, j]
-                text = '' if current[i, j].empty else str(current[i, j])
+                text = str(current[i, j])
                 label.set_text(text)
                 label.set_color('black')
 
