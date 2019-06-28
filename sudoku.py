@@ -89,6 +89,14 @@ class SudokuCell:
         assert num in range(0, 10)
         self._sudoku.view(type=np.ndarray).put(self._index, num)
 
+    @value.deleter
+    def value(self):
+        self.value = 0
+
+    def clear(self):
+        self.value = 0
+
+
     def __int__(self):
         return self.value
 
