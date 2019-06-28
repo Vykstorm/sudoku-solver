@@ -57,6 +57,12 @@ class SudokuDataset:
                     yield unsolved, solved
 
 
+    def get_sample(self, return_solution=True):
+        '''
+        This method returns only 1 sudoku sample from the dataset.
+        :param return_solution: If its True, return also the solution of the sudoku
+        '''
+        return next(self.get_samples(shuffle=True, return_solutions=return_solution))
 
 
 if __name__ == '__main__':
