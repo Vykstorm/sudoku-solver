@@ -4,6 +4,8 @@ from sudoku import Sudoku
 from time import time
 from itertools import product, islice
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 
 class SudokuSolver:
@@ -79,6 +81,8 @@ class SudokuSolver:
         # Return dict with metrics
         return dict(accuracy=accuracy, solve_time=solve_time, failures=failures_count)
 
+
+
 class SudokuIterativeSolver(SudokuSolver):
     '''
     Represent any kind of algorithm that can solve a sudoku iteratively: Adding
@@ -100,6 +104,88 @@ class SudokuIterativeSolver(SudokuSolver):
 
 
 
+    def solve_animation(self, sudoku, figsize=None, repeat=True, repeat_delay=3000, interval=500):
+
+        if figsize is None:
+            figsize = (5, 5)
+
+        # Create the figure
+        fig = plt.figure(figsize=figsize)
+
+        # We solve the sudoku and get a list of steps
+        if not sudoku.valid:
+            raise ValueError('You must pass a valid sudoku configuration to solve')
+
+        sudoku = sudoku.copy()
+        steps = []
+        steps.append(sudoku.copy())
+
+        try:
+            while not sudoku.full:
+                try:
+                    self.step(sudoku)
+                except ValueError:
+                    raise ValueError()
+
+                steps.append(sudoku.copy())
+                if not (sudoku.valid and steps[-2] < sudoku and\
+                sudoku.empty_cells_count == (steps[-2].empty_cells_count-1)):
+                    raise ValueError()
+        except ValueError:
+            pass
+
+
+        # First draw the sudoku grid
+        Sudoku().draw()
+
+        # Create one label for each sudoku cell
+        labels = np.array([
+            plt.text(k % 9 + 0.5, 8 - k // 9 + 0.5, '', horizontalalignment='center', verticalalignment='center',
+                fontsize='xx-large', color='black')\
+            for k, value in zip(range(0, 81), sudoku.flatten())]).reshape([9, 9])
+
+
+        def init():
+            return labels.flatten()
+
+        def update(k):
+            # Draw the next frame
+            current = steps[k]
+            for i, j in product(range(0, 9), range(0, 9)):
+                # Update label text
+                label = labels[i, j]
+                text = '' if current[i, j].empty else str(current[i, j])
+                label.set_text(text)
+                label.set_color('black')
+
+                # Update label color
+                if k == 0:
+                    continue
+                prev = steps[k-1]
+
+                if not current[i, j].valid:
+                    label.set_color('red')
+                elif prev[i, j].empty and not current[i, j].empty:
+                    label.set_color('#33840E')
+
+
+            return labels.flatten()
+
+
+        # Create and return the animation
+        anim = FuncAnimation(fig, update, frames=range(0, len(steps)), init_func=init, blit=True,
+                            repeat=repeat, repeat_delay=repeat_delay, interval=interval)
+        return anim
+
+
+    def show_solve_animation(self, *args, **kwargs):
+        anim = self.solve_animation(*args, **kwargs)
+        plt.show()
+
+
+
+
+
 class BasicSudokuIterativeSolver(SudokuIterativeSolver):
     '''
     Basic sudoku iterative algorithm solver implementation.
@@ -118,6 +204,7 @@ class BasicSudokuIterativeSolver(SudokuIterativeSolver):
             if len(nums) == 1:
                 sudoku[i, j] = next(iter(nums))
                 return
+
 
         # Cant put any number
         raise ValueError()
