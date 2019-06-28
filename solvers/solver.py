@@ -189,15 +189,11 @@ class BasicSudokuIterativeSolver(SudokuIterativeSolver):
     '''
 
     def step(self, sudoku):
-        for i, j in product(range(0, 9), range(0, 9)):
-            if not sudoku[i, j].empty:
-                continue
-
-            nums = sudoku[i, j].remaining_numbers
+        for cell in sudoku.empty_cells:
+            nums = cell.remaining_numbers
             if len(nums) == 1:
-                sudoku[i, j] = next(iter(nums))
+                cell.value = next(iter(nums))
                 return
-
 
         # Cant put any number
         raise ValueError()
