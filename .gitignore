@@ -56,3 +56,4 @@ geckodriver.log
 # Ignore floydhub files
 .floydexpt
 
+notebooks/*.png
