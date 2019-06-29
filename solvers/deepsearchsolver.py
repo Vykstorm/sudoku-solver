@@ -1,6 +1,7 @@
 
 import numpy as np
 from itertools import product, takewhile, chain
+from functools import lru_cache
 from solvers.solver import SudokuSolver
 import collections.abc
 import matplotlib.pyplot as plt
@@ -111,9 +112,7 @@ class DeepSearchSudokuSolver(SudokuSolver):
         # Helper class such that we can create the state of the sudoku at the k-th iteration
         class Steps(collections.abc.Sequence):
             def __getitem__(self, k):
-                indices = list(map(itemgetter(0), transitions))
-                values = list(map(itemgetter(1), transitions))
-
+                indices, values = [list(map(itemgetter(i), transitions)) for i in range(0, 2)]
                 step = sudoku.copy()
                 cells = list(map(step.flatten().__getitem__, indices))
 
@@ -130,6 +129,7 @@ class DeepSearchSudokuSolver(SudokuSolver):
                 return step
 
 
+            @lru_cache(maxsize=1)
             def __len__(self):
                 values = list(map(itemgetter(1), transitions))
                 n = len(transitions)
@@ -141,6 +141,7 @@ class DeepSearchSudokuSolver(SudokuSolver):
                     while i < n and values[i] == 0:
                         i += 1
                 return m
+
 
         steps = Steps()
 
