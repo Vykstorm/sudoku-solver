@@ -149,9 +149,9 @@ class SudokuIterativeSolver(SudokuSolver):
                 label = labels[i, j]
                 text = str(current[i, j])
                 label.set_text(text)
-                label.set_color('black')
 
                 # Update label color
+                label.set_color('black')
                 if k == 0:
                     continue
                 prev = steps[k-1]
