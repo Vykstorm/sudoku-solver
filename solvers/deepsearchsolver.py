@@ -1,7 +1,7 @@
 
 import numpy as np
 from itertools import product, takewhile, chain
-from solver import SudokuSolver
+from solvers.solver import SudokuSolver
 from collections.abc import Sequence
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
