@@ -131,13 +131,16 @@ class DeepSearchSudokuSolver(SudokuSolver):
 
 
             def __len__(self):
-                n = 1
-                values = np.array(list(map(itemgetter(1), transitions)), dtype=np.uint8)
-
-                n += np.count_nonzero(values != 0)
-                n += np.count_nonzero(np.logical_and(values[1:] == 0, values[:-1] != 0))
-
-                return n
+                values = list(map(itemgetter(1), transitions))
+                n = len(transitions)
+                m = 1
+                i = 0
+                while i < n:
+                    i += 1
+                    m += 1
+                    while i < n and values[i] == 0:
+                        i += 1
+                return m
 
         steps = Steps()
 
