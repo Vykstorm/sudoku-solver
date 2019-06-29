@@ -127,6 +127,12 @@ class SudokuCell:
         '''
         return self.value == 0
 
+
+    @property
+    def index(self):
+        return self._index
+
+
     @property
     def row_index(self):
         '''
