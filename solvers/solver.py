@@ -48,7 +48,7 @@ class SudokuSolver:
                 self.solve(result)
                 t1 = time()
 
-                if not np.all((result.view(type=np.ndarray) == solution.view(type=np.ndarray))):
+                if result != solution:
                     raise ValueError()
 
                 # Solved sudoku succesfully

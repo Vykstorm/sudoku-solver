@@ -481,6 +481,12 @@ class Sudoku(SudokuSection):
             raise ValueError()
         return other < self
 
+    def __eq__(self, other):
+        return np.all(self.view(type=np.ndarray) == other.view(type=np.ndarray))
+
+    def __ne__(self, other):
+        return np.any(self.view(type=np.ndarray) != other.view(type=np.ndarray))
+
 
     @property
     def plot(self):
