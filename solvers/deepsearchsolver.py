@@ -26,7 +26,7 @@ class DeepSearchSudokuSolver(SudokuSolver):
 
                 # All empty cells in its neightbourhood (row, column or square) still valid?
                 neighbours = chain(cell.row.empty_cells, cell.col.empty_cells, cell.square.empty_cells)
-                if not all(map(lambda neighbour: neighbour.valid, neighbours)):
+                if any(map(lambda neighbour: not neighbour.valid, neighbours)):
                     raise ValueError()
 
 

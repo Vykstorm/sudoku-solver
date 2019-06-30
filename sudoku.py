@@ -58,6 +58,7 @@ class SudokuSquareIndexParser(ListIndexParser):
     def __init__(self):
         super().__init__(9)
 
+    @lru_cache(maxsize=16)
     def parse(self, index):
         assert hasattr(index, '__int__') or (isinstance(index, tuple) and len(index) == 2 and all(map(lambda x: hasattr(x, '__int__'), index)))
 
