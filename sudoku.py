@@ -82,12 +82,12 @@ class SudokuCell:
 
     @property
     def value(self):
-        return int(self._sudoku.view(type=np.ndarray).flatten().__getitem__(self._index))
+        return int(self._sudoku.values.flatten().__getitem__(self._index))
 
     @value.setter
     def value(self, num):
         assert num in range(0, 10)
-        self._sudoku.view(type=np.ndarray).put(self._index, num)
+        self._sudoku.values.put(self._index, num)
 
     @value.deleter
     def value(self):
@@ -227,7 +227,7 @@ class SudokuSection(np.ndarray):
 
 
     def __getitem__(self, item):
-        values = self.view(type=np.ndarray).__getitem__(item)
+        values = self.values.__getitem__(item)
         indices = self._indices.__getitem__(item)
         if isinstance(indices, np.ndarray):
             return SudokuSection(self._sudoku, indices, values)
@@ -238,9 +238,9 @@ class SudokuSection(np.ndarray):
         if __debug__:
             if isinstance(value, int):
                 assert value in range(0, 10)
-
-            value = np.array(value, dtype=np.uint8)
-            assert np.all(np.isin(value.flatten(), range(0, 10)))
+            else:
+                value = np.array(value, dtype=np.uint8)
+                assert np.all(np.isin(value.flatten(), range(0, 10)))
 
         super().__setitem__(item, value)
 
@@ -250,6 +250,15 @@ class SudokuSection(np.ndarray):
 
     def __iter__(self):
         return map(partial(SudokuCell, self._sudoku), self._indices.flatten())
+
+
+    @property
+    def values(self):
+        '''
+        Returns a regular numpy ndarray view to this instance
+        '''
+        return self.view(type=np.ndarray)
+
 
 
     def clear(self):
@@ -265,7 +274,7 @@ class SudokuSection(np.ndarray):
         '''
         if self.ndim == 1:
             return self
-        return SudokuSection(self._sudoku, self._indices.flatten(), self.view(type=np.ndarray).flatten())
+        return SudokuSection(self._sudoku, self._indices.flatten(), self.values.flatten())
 
 
     @property
@@ -289,7 +298,7 @@ class SudokuSection(np.ndarray):
         '''
         Returns all the empty cells on this section
         '''
-        return self[self.view(type=np.ndarray) == 0]
+        return self[self.values == 0]
 
 
     @property
@@ -297,7 +306,7 @@ class SudokuSection(np.ndarray):
         '''
         Returns all non empty cells on this section
         '''
-        return self[self.view(type=np.ndarray) != 0]
+        return self[self.values != 0]
 
 
     @property
@@ -328,7 +337,7 @@ class SudokuSection(np.ndarray):
         '''
         Returns all the numbers in this sudoku section
         '''
-        cells = self.view(type=np.ndarray).flatten()
+        cells = self.values.flatten()
         return cells[cells > 0]
 
 
@@ -371,7 +380,7 @@ class Sudoku(SudokuSection):
             return SudokuSection(
                 self.sudoku,
                 self.sudoku._indices.__getitem__(index),
-                self.sudoku.view(type=np.ndarray).__getitem__(index)
+                self.sudoku.values.__getitem__(index)
             )
 
         def __setitem__(self, index, value):
@@ -472,9 +481,8 @@ class Sudoku(SudokuSection):
         if not isinstance(other, Sudoku):
             raise ValueError()
 
-        a, b = self.view(type=np.ndarray), other.view(type=np.ndarray)
         return self.empty_cells_count > other.empty_cells_count and\
-            np.all(np.logical_or(a == 0, a == b))
+            np.all(np.logical_or(self.values == 0, self.values == other.values))
 
     def __gt__(self, other):
         if not isinstance(other, Sudoku):
@@ -482,10 +490,10 @@ class Sudoku(SudokuSection):
         return other < self
 
     def __eq__(self, other):
-        return np.all(self.view(type=np.ndarray) == other.view(type=np.ndarray))
+        return np.all(self.values == other.values)
 
     def __ne__(self, other):
-        return np.any(self.view(type=np.ndarray) != other.view(type=np.ndarray))
+        return np.any(self.values != other.values)
 
 
     @property
