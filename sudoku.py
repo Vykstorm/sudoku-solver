@@ -11,7 +11,7 @@ from numpy import ndarray
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from itertools import product
-from functools import partial, reduce
+from functools import partial, reduce, lru_cache
 import collections.abc
 import re
 import operator
@@ -260,7 +260,6 @@ class SudokuSection(np.ndarray):
         return self.view(type=np.ndarray)
 
 
-
     def clear(self):
         '''
         Clear all the sudoku cells inside this section (set their values to 0)
@@ -296,17 +295,17 @@ class SudokuSection(np.ndarray):
     @property
     def empty_cells(self):
         '''
-        Returns all the empty cells on this section
+        Returns all the empty cells on this section (Returns an iterator)
         '''
-        return self[self.values == 0]
+        return filter(lambda cell: cell.empty, self)
 
 
     @property
     def filled_cells(self):
         '''
-        Returns all non empty cells on this section
+        Returns all non empty cells on this section (Returns an iterator)
         '''
-        return self[self.values != 0]
+        return filter(lambda cell: not cell.empty, self)
 
 
     @property
@@ -346,7 +345,7 @@ class SudokuSection(np.ndarray):
         '''
         Returns all the numbers (removing repetitions) in this sudoku section
         '''
-        return frozenset(self.numbers)
+        return frozenset(self.values.flatten()) - {0}
 
 
     @property
